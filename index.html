@@ -41,6 +41,7 @@
       width: 100%;
       padding: 20px;
       background: linear-gradient(transparent, rgba(0,0,0,0.9));
+      text-align: left;
     }
 
     .buttons {
@@ -81,6 +82,7 @@
       height: 60%;
       overflow-y: auto;
       margin-bottom: 10px;
+      text-align: left;
     }
 
     input {
@@ -108,6 +110,7 @@
   <img id="profileImage" src="https://picsum.photos/400/500" />
   <div class="info">
     <h2 id="profileName">Cargando...</h2>
+    <p id="profileBio"></p>
   </div>
 </div>
 
@@ -138,6 +141,7 @@ async function loadProfile() {
     .from("profiles")
     .select("*")
     .neq("id", currentUser)
+    .eq("Invisible", false)
     .limit(1);
 
   if (error) {
@@ -147,8 +151,15 @@ async function loadProfile() {
 
   if (data.length > 0) {
     currentProfile = data[0];
-    document.getElementById("profileImage").src = currentProfile.image_url || "https://picsum.photos/400/500";
-    document.getElementById("profileName").innerText = currentProfile.name || "Usuario";
+
+    document.getElementById("profileImage").src =
+      currentProfile.Photo_url || "https://picsum.photos/400/500";
+
+    document.getElementById("profileName").innerText =
+      currentProfile.Name || "Usuario";
+
+    document.getElementById("profileBio").innerText =
+      currentProfile.Bio || "";
   }
 }
 
@@ -184,6 +195,7 @@ async function checkMatch() {
       .select();
 
     currentMatchId = match[0].id;
+
     document.getElementById("chatModal").style.display = "block";
     loadMessages();
   } else {
