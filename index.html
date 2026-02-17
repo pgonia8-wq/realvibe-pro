@@ -141,13 +141,26 @@ async function loadProfile() {
     .from("profiles")
     .select("*")
     .neq("id", currentUser)
-    .eq("Invisible", false)
     .limit(1);
 
   if (error) {
     console.log(error);
     return;
   }
+
+  if (data.length > 0) {
+    currentProfile = data[0];
+
+    document.getElementById("profileImage").src =
+      currentProfile.photo_url || currentProfile.Photo_url || "https://picsum.photos/400/500";
+
+    document.getElementById("profileName").innerText =
+      currentProfile.name || currentProfile.Name || "Usuario";
+
+    document.getElementById("profileBio").innerText =
+      currentProfile.bio || currentProfile.Bio || "";
+  }
+}
 
   if (data.length > 0) {
     currentProfile = data[0];
