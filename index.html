@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RealVibe Pro</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #111;
+      color: white;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    .card {
+      width: 320px;
+      height: 500px;
+      margin: 20px auto;
+      background: #222;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .info {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      padding: 20px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    }
+
+    .buttons {
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 12px 25px;
+      margin: 10px;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .like {
+      background: #00ff99;
+    }
+
+    .dislike {
+      background: #ff4444;
+    }
+
+    #chatModal {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      height: 50%;
+      background: #000;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      padding: 15px;
+      overflow-y: auto;
+    }
+
+    #messages {
+      height: 60%;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    input {
+      width: 70%;
+      padding: 10px;
+      border-radius: 20px;
+      border: none;
+    }
+
+    .sendBtn {
+      padding: 10px 15px;
+      border-radius: 20px;
+      border: none;
+      background: #00ff99;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🔥 RealVibe Pro</h1>
+
+<div class="card">
+  <img id="profileImage" src="https://picsum.photos/400/500" />
+  <div class="info">
+    <h2 id="profileName">Cargando...</h2>
+  </div>
+</div>
+
+<div class="buttons">
+  <button class="dislike" onclick="dislike()">Nope</button>
+  <button class="like" onclick="like()">Like</button>
+</div>
+
+<div id="chatModal">
+  <h3>Chat</h3>
+  <div id="messages"></div>
+  <input id="messageInput" placeholder="Escribe..." />
+  <button class="sendBtn" onclick="sendMessage()">Enviar</button>
+</div>
+
+<script>
+const supabase = window.supabase.createClient(
+  "https://bogcdpwnnjxfgfdcewif.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJvZ2NkcHdubmp4ZmdmZGNld2lmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyOTM2MjgsImV4cCI6MjA4Njg2OTYyOH0.65pFiqgEmjogf73mZCG-yT2BZqx6Q8cbA_Ce9RhnIhQ"
+);
+
+let currentUser = "user_test_1";
+let currentProfile = null;
+let currentMatchId = null;
+
+async function loadProfile() {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .neq("id", currentUser)
+    .limit(1);
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  if (data.length > 0) {
+    currentProfile = data[0];
+    document.getElementById("profileImage").src = currentProfile.image_url || "https://picsum.photos/400/500";
+    document.getElementById("profileName").innerText = currentProfile.name || "Usuario";
+  }
+}
+
+async function like() {
+  if (!currentProfile) return;
+
+  await supabase.from("likes").insert({
+    user_id: currentUser,
+    liked_user_id: currentProfile.id
+  });
+
+  checkMatch();
+}
+
+async function dislike() {
+  loadProfile();
+}
+
+async function checkMatch() {
+  const { data } = await supabase
+    .from("likes")
+    .select("*")
+    .eq("user_id", currentProfile.id)
+    .eq("liked_user_id", currentUser);
+
+  if (data.length > 0) {
+    const { data: match } = await supabase
+      .from("matches")
+      .insert({
+        user1_id: currentUser,
+        user2_id: currentProfile.id
+      })
+      .select();
+
+    currentMatchId = match[0].id;
+    document.getElementById("chatModal").style.display = "block";
+    loadMessages();
+  } else {
+    loadProfile();
+  }
+}
+
+async function loadMessages() {
+  const { data } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("match_id", currentMatchId)
+    .order("created_at");
+
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
+
+  data.forEach(msg => {
+    const div = document.createElement("div");
+    div.innerText = msg.content;
+    box.appendChild(div);
+  });
+}
+
+async function sendMessage() {
+  const text = document.getElementById("messageInput").value;
+  if (!text) return;
+
+  await supabase.from("messages").insert({
+    match_id: currentMatchId,
+    sender_id: currentUser,
+    content: text
+  });
+
+  document.getElementById("messageInput").value = "";
+  loadMessages();
+}
+
+loadProfile();
+</script>
+
+</body>
+</html>
