@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RealVibe Pro 2026</title>
+<title>RealVibe Pro Test</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -96,31 +96,42 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let profiles = [];
 let currentIndex = 0;
-let currentUser = "User_1"; // tu ID real
+let currentUser = "User_1";
 const discoverSection = document.getElementById("discoverSection");
 
-// --- CARGAR PERFILES ---
+// --- CARGAR PERFILES (modo prueba) ---
 async function loadProfiles(){
   try{
-    const { data, error } = await supabase.from("profiles").select("*").limit(10);
-    if(error){ console.log("Error Supabase:",error); return; }
+    const { data } = await supabase.from("profiles").select("*").limit(10);
+
+    // ignoramos filtros problemáticos
     profiles = (data && data.length>0)? data : [
       {id:"User_2", name:"Ana", bio:"Me gusta la música", photo_url:"https://picsum.photos/400/500?2"},
       {id:"User_3", name:"Luis", bio:"Aventurero", photo_url:"https://picsum.photos/400/500?3"},
       {id:"User_4", name:"Marta", bio:"Amante del café", photo_url:"https://picsum.photos/400/500?4"}
     ];
-    currentIndex = 0;
+
+    currentIndex=0;
     renderCards();
-  }catch(e){ console.log("Error general:",e); }
+  }catch(e){ 
+    console.log("Error:",e);
+    // perfiles de prueba si falla Supabase
+    profiles = [
+      {id:"User_2", name:"Ana", bio:"Me gusta la música", photo_url:"https://picsum.photos/400/500?2"},
+      {id:"User_3", name:"Luis", bio:"Aventurero", photo_url:"https://picsum.photos/400/500?3"},
+      {id:"User_4", name:"Marta", bio:"Amante del café", photo_url:"https://picsum.photos/400/500?4"}
+    ];
+    renderCards();
+  }
 }
 
-// --- RENDERIZAR TODAS LAS TARJETAS ---
+// --- RENDERIZAR TARJETAS APILADAS ---
 function renderCards(){
-  discoverSection.innerHTML = "";
+  discoverSection.innerHTML="";
   profiles.slice().reverse().forEach((profile,i)=>{
     const card = document.createElement("div");
-    card.className = "card";
-    card.dataset.index = i;
+    card.className="card";
+    card.dataset.index=i;
     card.innerHTML = `
       <img src="${profile.photo_url}" alt="Profile">
       <div class="overlay">
@@ -128,9 +139,9 @@ function renderCards(){
         <p>${profile.bio}</p>
       </div>
     `;
-    card.style.zIndex = i; 
+    card.style.zIndex=i;
     discoverSection.appendChild(card);
-    if(i === profiles.length-1) addSwipe(card);
+    if(i===profiles.length-1) addSwipe(card);
   });
 }
 
@@ -145,21 +156,21 @@ function addSwipe(card){
   });
   card.addEventListener("touchend",()=>{
     isDragging=false;
-    if(currentX>80){ likeProfile(); swipeOut(card, "right"); }
-    else if(currentX<-80){ dislikeProfile(); swipeOut(card, "left"); }
+    if(currentX>80){ likeProfile(); swipeOut(card,"right"); }
+    else if(currentX<-80){ dislikeProfile(); swipeOut(card,"left"); }
     else{ card.style.transition="transform 0.3s"; card.style.transform="translateX(0) rotate(0)"; setTimeout(()=>{card.style.transition="";},300); }
   });
 }
 
-// --- ANIMACIÓN SALIDA TARJETA ---
+// --- ANIMACIÓN TARJETA SALIDA ---
 function swipeOut(card,dir){
   card.style.transition="transform 0.5s, opacity 0.5s";
-  card.style.transform = `translateX(${dir==="right"?1000:-1000}px) rotate(${dir==="right"?45:-45}deg)`;
-  card.style.opacity = 0;
-  setTimeout(()=>{ 
-    card.remove(); 
-    currentIndex++; 
-    const next = document.querySelector(`.card[data-index='${profiles.length-1-currentIndex}']`);
+  card.style.transform = `translateX(${dir==="right"?1000:dir==="left"?-1000:0}px) rotate(${dir==="right"?45:dir==="left"?-45:0}deg) translateY(${dir==="up"?-500:0}px)`;
+  card.style.opacity=0;
+  setTimeout(()=>{
+    card.remove();
+    currentIndex++;
+    const next=document.querySelector(`.card[data-index='${profiles.length-1-currentIndex}']`);
     if(next) addSwipe(next);
   },500);
 }
@@ -179,15 +190,15 @@ function dislikeProfile(){
 
 // --- BOTONES ---
 document.getElementById("btnLike").addEventListener("click",()=>{
-  const card=document.querySelector(".card:last-child"); 
+  const card=document.querySelector(".card:last-child");
   if(card){ likeProfile(); swipeOut(card,"right"); }
 });
 document.getElementById("btnDislike").addEventListener("click",()=>{
-  const card=document.querySelector(".card:last-child"); 
+  const card=document.querySelector(".card:last-child");
   if(card){ dislikeProfile(); swipeOut(card,"left"); }
 });
 document.getElementById("btnSuperLike").addEventListener("click",()=>{
-  const card=document.querySelector(".card:last-child"); 
+  const card=document.querySelector(".card:last-child");
   if(card){ console.log("Super Like a",profiles[currentIndex]?.name); swipeOut(card,"up"); currentIndex++; }
 });
 
