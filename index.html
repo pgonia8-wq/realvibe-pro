@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RealVibe Pro Test</title>
+<title>RealVibe Pro</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -96,36 +96,43 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let profiles = [];
 let currentIndex = 0;
-let currentUser = "User_1";
+let currentUser = "user_1"; // asegúrate que tu propio ID esté en minúscula
 const discoverSection = document.getElementById("discoverSection");
 
-// --- CARGAR PERFILES (modo prueba) ---
+// --- CARGAR PERFILES ---
 async function loadProfiles(){
   try{
-    const { data } = await supabase.from("profiles").select("*").limit(10);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .neq("id", currentUser)   // No mostrar tu propio perfil
+      .eq("invisible", false)   // Solo visibles
+      .limit(10);
 
-    // ignoramos filtros problemáticos
-    profiles = (data && data.length>0)? data : [
-      {id:"User_2", name:"Ana", bio:"Me gusta la música", photo_url:"https://picsum.photos/400/500?2"},
-      {id:"User_3", name:"Luis", bio:"Aventurero", photo_url:"https://picsum.photos/400/500?3"},
-      {id:"User_4", name:"Marta", bio:"Amante del café", photo_url:"https://picsum.photos/400/500?4"}
+    if(error) console.log("Error Supabase:", error);
+
+    profiles = (data && data.length>0) ? data : [
+      {id:"user_2", name:"Ana", bio:"Me gusta la música", photo_url:"https://picsum.photos/400/500?2"},
+      {id:"user_3", name:"Luis", bio:"Aventurero", photo_url:"https://picsum.photos/400/500?3"},
+      {id:"user_4", name:"Marta", bio:"Amante del café", photo_url:"https://picsum.photos/400/500?4"}
     ];
 
     currentIndex=0;
+    console.log("Perfiles cargados:", profiles);
     renderCards();
-  }catch(e){ 
-    console.log("Error:",e);
+  }catch(e){
+    console.log("Error general:", e);
     // perfiles de prueba si falla Supabase
     profiles = [
-      {id:"User_2", name:"Ana", bio:"Me gusta la música", photo_url:"https://picsum.photos/400/500?2"},
-      {id:"User_3", name:"Luis", bio:"Aventurero", photo_url:"https://picsum.photos/400/500?3"},
-      {id:"User_4", name:"Marta", bio:"Amante del café", photo_url:"https://picsum.photos/400/500?4"}
+      {id:"user_2", name:"Ana", bio:"Me gusta la música", photo_url:"https://picsum.photos/400/500?2"},
+      {id:"user_3", name:"Luis", bio:"Aventurero", photo_url:"https://picsum.photos/400/500?3"},
+      {id:"user_4", name:"Marta", bio:"Amante del café", photo_url:"https://picsum.photos/400/500?4"}
     ];
     renderCards();
   }
 }
 
-// --- RENDERIZAR TARJETAS APILADAS ---
+// --- RENDERIZAR TARJETAS ---
 function renderCards(){
   discoverSection.innerHTML="";
   profiles.slice().reverse().forEach((profile,i)=>{
