@@ -8,15 +8,70 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fa;margin:0;padding:0;}
-#discoverSection{display:flex;justify-content:center;align-items:center;height:90vh;position:relative;}
-.card{width:90%;max-width:400px;height:500px;background:white;border-radius:2xl;box-shadow:0 12px 30px rgba(0,0,0,0.15);overflow:hidden;position:absolute;transition:transform 0.3s;}
-.card img{width:100%;height:100%;object-fit:cover;}
-.overlay{position:absolute;bottom:0;width:100%;background:linear-gradient(transparent, rgba(0,0,0,0.6));color:white;padding:16px;}
-.overlay h2{font-size:1.5rem;font-weight:700;}
-.overlay p{font-size:0.9rem;margin-top:4px;}
-.buttons{position:fixed;bottom:20px;width:100%;display:flex;justify-content:center;gap:12px;z-index:50;}
-.buttons button{padding:14px 24px;border-radius:16px;font-weight:700;color:white;font-size:0.95rem;min-width:90px;box-shadow:0 6px 12px rgba(0,0,0,0.15);}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background: linear-gradient(180deg,#f8f9fa 0%,#ffffff 100%);
+  margin:0;
+  padding:0;
+  overflow-x:hidden;
+}
+#discoverSection{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:90vh;
+  position:relative;
+}
+.card{
+  width:90%;
+  max-width:400px;
+  height:500px;
+  background:white;
+  border-radius:2xl;
+  box-shadow:0 12px 30px rgba(0,0,0,0.15);
+  overflow:hidden;
+  position:absolute;
+  transition:transform 0.3s;
+}
+.card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.overlay{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  background:linear-gradient(transparent, rgba(0,0,0,0.6));
+  color:white;
+  padding:16px;
+}
+.overlay h2{
+  font-size:1.5rem;
+  font-weight:700;
+}
+.overlay p{
+  font-size:0.9rem;
+  margin-top:4px;
+}
+.buttons{
+  position:fixed;
+  bottom:20px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  z-index:50;
+}
+.buttons button{
+  padding:14px 24px;
+  border-radius:16px;
+  font-weight:700;
+  color:white;
+  font-size:0.95rem;
+  min-width:90px;
+  box-shadow:0 6px 12px rgba(0,0,0,0.15);
+}
 .like{background:linear-gradient(90deg,#ff69b4,#8a2be2);}
 .dislike{background:linear-gradient(90deg,#a3a3a3,#6b6b6b);}
 .superlike{background:linear-gradient(90deg,#00bfff,#1e90ff);}
@@ -42,21 +97,34 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let profiles = [];
 let currentIndex = 0;
-let currentUser = "User_1";
+let currentUser = "User_1"; // Cambia por tu id real si es distinto
 
 const discoverSection = document.getElementById("discoverSection");
 
 // --- CARGAR PERFILES DESDE SUPABASE ---
 async function loadProfiles(){
-  const { data, error } = await supabase.from("profiles")
-    .select("*")
-    .eq("invisible",false)
-    .neq("id",currentUser)
-    .limit(10);
-  if(error){ console.log("Error Supabase:",error); return; }
-  profiles = data;
-  currentIndex = 0;
-  showProfile();
+  try{
+    const { data, error } = await supabase.from("profiles")
+      .select("*")
+      //.eq("invisible",false) // temporalmente desactivado
+      //.neq("id",currentUser) // temporalmente desactivado
+      .limit(10);
+    
+    if(error){ console.log("Error Supabase:",error); return; }
+    
+    if(!data || data.length === 0){
+      // perfiles de prueba
+      profiles = [
+        {id:"User_2", name:"Ana", bio:"Me gusta la música", photo_url:"https://picsum.photos/400/500?2"},
+        {id:"User_3", name:"Luis", bio:"Aventurero", photo_url:"https://picsum.photos/400/500?3"},
+        {id:"User_4", name:"Marta", bio:"Amante del café", photo_url:"https://picsum.photos/400/500?4"},
+      ];
+    } else {
+      profiles = data;
+    }
+    currentIndex = 0;
+    showProfile();
+  }catch(e){ console.log("Error general:",e); }
 }
 
 // --- MOSTRAR PERFIL ACTUAL ---
@@ -101,10 +169,11 @@ function addSwipe(card){
       likeProfile();
     } else if(currentX < -80){
       dislikeProfile();
+    } else {
+      card.style.transition="transform 0.3s";
+      card.style.transform="translateX(0px) rotate(0deg)";
+      setTimeout(()=>{card.style.transition="";},300);
     }
-    card.style.transition="transform 0.3s";
-    card.style.transform="translateX(0px) rotate(0deg)";
-    setTimeout(()=>{card.style.transition="";},300);
   });
 }
 
