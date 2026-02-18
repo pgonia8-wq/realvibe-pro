@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RealVibe Pro</title>
+<title>RealVibe Pro Test</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  height:90vh;
+  height:85vh;
   position:relative;
 }
 .card{
@@ -96,17 +96,17 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let profiles = [];
 let currentIndex = 0;
-let currentUser = "user_1"; // asegúrate que tu propio ID esté en minúscula
+let currentUser = "user_1"; // asegúrate que tu ID esté en minúscula
 const discoverSection = document.getElementById("discoverSection");
 
-// --- CARGAR PERFILES ---
+// --- CARGAR PERFILES REAL / FALLBACK ---
 async function loadProfiles(){
   try{
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .neq("id", currentUser)   // No mostrar tu propio perfil
-      .eq("invisible", false)   // Solo visibles
+      .neq("id", currentUser)
+      .eq("invisible", false)
       .limit(10);
 
     if(error) console.log("Error Supabase:", error);
@@ -117,12 +117,11 @@ async function loadProfiles(){
       {id:"user_4", name:"Marta", bio:"Amante del café", photo_url:"https://picsum.photos/400/500?4"}
     ];
 
-    currentIndex=0;
+    currentIndex = 0;
     console.log("Perfiles cargados:", profiles);
     renderCards();
   }catch(e){
     console.log("Error general:", e);
-    // perfiles de prueba si falla Supabase
     profiles = [
       {id:"user_2", name:"Ana", bio:"Me gusta la música", photo_url:"https://picsum.photos/400/500?2"},
       {id:"user_3", name:"Luis", bio:"Aventurero", photo_url:"https://picsum.photos/400/500?3"},
@@ -148,12 +147,15 @@ function renderCards(){
     `;
     card.style.zIndex=i;
     discoverSection.appendChild(card);
+
+    // Aseguramos que la tarjeta superior tenga swipe
     if(i===profiles.length-1) addSwipe(card);
   });
 }
 
 // --- SWIPE TARJETA SUPERIOR ---
 function addSwipe(card){
+  if(!card) return;
   let startX=0,currentX=0,isDragging=false;
   card.addEventListener("touchstart",(e)=>{ startX=e.touches[0].clientX; isDragging=true; });
   card.addEventListener("touchmove",(e)=>{
@@ -171,6 +173,7 @@ function addSwipe(card){
 
 // --- ANIMACIÓN TARJETA SALIDA ---
 function swipeOut(card,dir){
+  if(!card) return;
   card.style.transition="transform 0.5s, opacity 0.5s";
   card.style.transform = `translateX(${dir==="right"?1000:dir==="left"?-1000:0}px) rotate(${dir==="right"?45:dir==="left"?-45:0}deg) translateY(${dir==="up"?-500:0}px)`;
   card.style.opacity=0;
