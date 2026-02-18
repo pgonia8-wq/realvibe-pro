@@ -141,12 +141,30 @@ async function loadProfile() {
     .from("profiles")
     .select("*")
     .neq("id", currentUser)
+    .eq("invisible", false)
     .limit(1);
 
   if (error) {
     console.log(error);
     return;
   }
+
+  console.log("PROFILE DATA:", data); // <- Esto nos mostrará el Row que llega
+
+  if (data.length > 0) {
+    currentProfile = data[0];
+
+    // 👇 Usa exactamente las propiedades en minúsculas
+    document.getElementById("profileImage").src =
+      currentProfile.photo_url || "https://picsum.photos/400/500";
+
+    document.getElementById("profileName").innerText =
+      currentProfile.name || "Usuario";
+
+    document.getElementById("profileBio").innerText =
+      currentProfile.bio || "";
+  }
+}
 
   if (data.length > 0) {
     currentProfile = data[0];
