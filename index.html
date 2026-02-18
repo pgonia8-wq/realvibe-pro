@@ -1,148 +1,243 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RealVibe Pro</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8f9fa; }
-    .card { max-width: 400px; margin: 40px auto; background: white; border-radius: 2xl; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; position: relative; touch-action: pan-x; }
-    .card img { width: 100%; height: 500px; object-fit: cover; }
-    .card-content { padding: 16px; }
-    .buttons { display: flex; justify-content: space-around; margin-top: 16px; }
-    .buttons button { padding: 12px 24px; border-radius: 12px; font-weight: 600; color: white; }
-    .like { background: linear-gradient(90deg,#ff69b4,#8a2be2); }
-    .dislike { background: gray; }
-    #chatModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-    #chatContent { background:white; padding:20px; border-radius:16px; max-width:400px; width:90%; height:70%; display:flex; flex-direction:column; }
-    #messages { flex:1; overflow-y:auto; margin-bottom:12px; }
-    #messages div { margin-bottom:8px; padding:6px 10px; border-radius:10px; background:#f1f1f1; max-width:70%; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealVibe Pro - Full</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/minikit@latest/dist/minikit.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fa;margin:0;padding:0;}
+.card{max-width:400px;margin:40px auto 0;background:white;border-radius:2xl;box-shadow:0 4px 12px rgba(0,0,0,0.1);overflow:hidden;position:relative;touch-action: pan-x;}
+.card img{width:100%;height:400px;object-fit:cover;}
+.card-content{padding:16px;}
+.buttons{display:flex;justify-content:space-around;margin-top:16px;}
+.buttons button{padding:12px 24px;border-radius:12px;font-weight:600;color:white;}
+.like{background:linear-gradient(90deg,#ff69b4,#8a2be2);}
+.dislike{background:gray;}
+#chatModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
+#chatContent{background:white;padding:20px;border-radius:16px;max-width:400px;width:90%;height:70%;display:flex;flex-direction:column;}
+#messages{flex:1;overflow-y:auto;margin-bottom:12px;}
+#messages div{margin-bottom:8px;padding:6px 10px;border-radius:10px;background:#f1f1f1;max-width:70%;}
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;display:flex;justify-content:space-around;background:white;padding:12px 0;border-top:1px solid #ddd;}
+.bottom-nav button{flex:1;text-align:center;font-weight:600;padding:8px;}
+.active{color:#ff69b4;font-weight:700;}
+#profileEdit{display:none;padding:16px;max-width:400px;margin:0 auto;background:white;border-radius:16px;margin-top:16px;}
+#profileEdit input,#profileEdit textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;}
+.premium-buttons{display:flex;justify-content:space-around;margin-top:12px;}
+.premium-buttons button{padding:8px 12px;border-radius:12px;font-weight:600;color:white;font-size:0.8rem;}
+.superlike{background:#00bfff;}
+.boost{background:#ff8c00;}
+.plus{background:#ff69b4;}
+.gold{background:#ffd700;}
+.platinum{background:#8a2be2;}
+.upload-section input{margin-bottom:8px;}
+#filtersModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
+#filtersContent{background:white;padding:16px;border-radius:16px;max-width:400px;width:90%;}
+</style>
 </head>
 <body>
 
-  <!-- PERFIL CARD -->
+<!-- WORLD ID VERIFICATION -->
+<div id="worldIdSection" class="max-w-400 mx-auto text-center p-4">
+  <h2 class="text-xl font-bold mb-2">Verificación World ID</h2>
+  <button class="like w-full" onclick="verifyWorldID()">Verificar</button>
+  <p id="worldIdStatus" class="mt-2 text-gray-600"></p>
+</div>
+
+<!-- DISCOVER / SWIPE -->
+<div id="discoverSection" style="display:none;">
   <div class="card" id="profileCard">
     <img id="profileImage" src="https://picsum.photos/400/500" alt="Profile">
     <div class="card-content">
       <h2 id="profileName" class="text-xl font-bold">Usuario</h2>
       <p id="profileBio" class="text-gray-600 mt-1">Bio del usuario</p>
+      <p id="topPickNote" class="text-xs text-gray-500 mt-1"></p>
     </div>
     <div class="buttons">
       <button class="dislike" onclick="dislike()">Dislike</button>
       <button class="like" onclick="like()">Like</button>
     </div>
-  </div>
-
-  <!-- CHAT MODAL -->
-  <div id="chatModal" class="flex">
-    <div id="chatContent">
-      <h2 class="text-lg font-bold mb-2">Chat</h2>
-      <div id="messages"></div>
-      <input id="messageInput" type="text" placeholder="Escribe un mensaje..." class="border p-2 rounded mb-2"/>
-      <button class="like w-full" onclick="sendMessage()">Enviar</button>
-      <button class="dislike w-full mt-2" onclick="closeChat()">Cerrar</button>
+    <div class="premium-buttons">
+      <button class="superlike" onclick="buyPremium('Super Like',1)">Super Like 1 WLD</button>
+      <button class="boost" onclick="buyPremium('Boost',5)">Boost 5 WLD</button>
+      <button class="plus" onclick="buyPremium('Plus',10)">Plus 10 WLD</button>
+      <button class="gold" onclick="buyPremium('Gold',25)">Gold 25 WLD</button>
+      <button class="platinum" onclick="buyPremium('Platinum',60)">Platinum 60 WLD</button>
     </div>
+    <button class="like w-full mt-2" onclick="openFilters()">Filtros Avanzados</button>
+    <label class="flex items-center mt-2 justify-center"><input type="checkbox" id="womenFirst" class="mr-2"> Women Message First</label>
   </div>
+</div>
 
-  <script>
-    // --- Supabase ---
-    const SUPABASE_URL = "https://bogcdpwnnjxfgfdcewif.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJvZ2NkcHdubmp4ZmdmZGNld2lmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyOTM2MjgsImV4cCI6MjA4Njg2OTYyOH0.65pFiqgEmjogf73mZCG-yT2BZqx6Q8cbA_Ce9RhnIhQ";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<!-- PERFIL EDITABLE -->
+<div id="profileEdit">
+  <h2 class="text-xl font-bold mb-2">Editar Perfil</h2>
+  <input type="text" id="editName" placeholder="Nombre">
+  <textarea id="editBio" placeholder="Bio"></textarea>
+  <input type="text" id="editPhoto" placeholder="URL Foto Principal">
+  <div class="upload-section">
+    <input type="file" id="photo1">
+    <input type="file" id="photo2">
+    <input type="file" id="photo3">
+  </div>
+  <button class="like w-full" onclick="saveProfile()">Guardar</button>
+</div>
 
-    let currentUser = "User_1"; // temporal
-    let currentProfile = null;
-    let currentMatchId = null;
+<!-- CHAT MODAL -->
+<div id="chatModal" class="flex">
+  <div id="chatContent">
+    <h2 class="text-lg font-bold mb-2">Chat</h2>
+    <div id="messages"></div>
+    <input id="messageInput" type="text" placeholder="Escribe un mensaje..." class="border p-2 rounded mb-2"/>
+    <button class="like w-full" onclick="sendMessage()">Enviar</button>
+    <button class="dislike w-full mt-2" onclick="closeChat()">Cerrar</button>
+  </div>
+</div>
 
-    // --- LOAD PROFILE ---
-    async function loadProfile() {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        //.neq("id", currentUser) // temporal, carga todos
-        .eq("invisible", false)
-        .limit(1);
+<!-- FILTROS MODAL -->
+<div id="filtersModal" class="flex">
+  <div id="filtersContent">
+    <h2 class="text-lg font-bold mb-2">Filtros Avanzados</h2>
+    <label>Edad: <span id="ageVal">18-50</span></label>
+    <input type="range" min="18" max="50" id="ageSlider" value="50" oninput="updateAgeVal()">
+    <label>Distancia (km): <span id="distVal">10-500</span></label>
+    <input type="range" min="10" max="500" id="distSlider" value="500" oninput="updateDistVal()">
+    <label>Género:</label>
+    <select id="genderFilter">
+      <option value="">Todos</option>
+      <option value="male">Hombre</option>
+      <option value="female">Mujer</option>
+      <option value="other">Otro</option>
+    </select>
+    <button class="like w-full mt-2" onclick="applyFilters()">Aplicar</button>
+    <button class="dislike w-full mt-2" onclick="closeFilters()">Cerrar</button>
+  </div>
+</div>
 
-      if (error) { console.log(error); return; }
+<!-- MENÚ INFERIOR -->
+<div class="bottom-nav">
+  <button id="discoverBtn" class="active" onclick="showSection('discover')">Discover</button>
+  <button id="chatBtn" onclick="showSection('chat')">Chat</button>
+  <button id="profileBtn" onclick="showSection('profile')">Perfil</button>
+</div>
 
-      console.log("PROFILE DATA:", data);
+<script>
+const SUPABASE_URL="https://bogcdpwnnjxfgfdcewif.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJvZ2NkcHdubmp4ZmdmZGNld2lmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyOTM2MjgsImV4cCI6MjA4Njg2OTYyOH0.65pFiqgEmjogf73mZCG-yT2BZqx6Q8cbA_Ce9RhnIhQ";
+const WALLET="0xdf4a991bc05945bd0212e773adcff6ea619f4c4b";
+const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-      if (data.length > 0) {
-        currentProfile = data[0];
+let currentUser="User_1";
+let currentProfile=null;
+let topPicks=[];
 
-        document.getElementById("profileImage").src = currentProfile.photo_url || "https://picsum.photos/400/500";
-        document.getElementById("profileName").innerText = currentProfile.name || "Usuario";
-        document.getElementById("profileBio").innerText = currentProfile.bio || "";
-      }
-    }
+// --- WORLD ID ---
+async function verifyWorldID(){
+  try{
+    await MiniKit.verifyWorldID({actionId:"realvibe-verification", onSuccess:()=>{ 
+      document.getElementById("worldIdStatus").innerText="✅ Verificado"; 
+      document.getElementById("worldIdSection").style.display="none";
+      document.getElementById("discoverSection").style.display="block";
+      loadProfile();
+    }});
+  }catch(e){ alert("Error World ID: "+e.message); }
+}
 
-    // --- LIKE / DISLIKE ---
-    async function like() {
-      if (!currentProfile) return;
-      await supabase.from("likes").insert({
-        user_id: currentUser,
-        liked_user_id: currentProfile.id
-      });
-      checkMatch();
-      loadProfile(); // siguiente perfil
-    }
+// --- SECCIONES ---
+function showSection(section){
+  document.getElementById("discoverSection").style.display = section==='discover'?'block':'none';
+  document.getElementById("profileEdit").style.display = section==='profile'?'block':'none';
+  document.getElementById("chatModal").style.display = section==='chat'?'flex':'none';
+  document.getElementById("discoverBtn").classList.toggle("active", section==='discover');
+  document.getElementById("chatBtn").classList.toggle("active", section==='chat');
+  document.getElementById("profileBtn").classList.toggle("active", section==='profile');
+  if(section==='profile'){ loadProfileToEdit(); }
+}
 
-    function dislike() {
-      loadProfile(); // siguiente perfil
-    }
+// --- LOAD PROFILE / TOP PICKS ---
+async function loadProfile(){
+  const { data } = await supabase.from("profiles").select("*").eq("invisible",false).limit(1);
+  if(data.length>0){
+    currentProfile=data[0];
+    document.getElementById("profileImage").src=currentProfile.photo_url||"https://picsum.photos/400/500";
+    document.getElementById("profileName").innerText=currentProfile.name||"Usuario";
+    document.getElementById("profileBio").innerText=currentProfile.bio||"";
+    document.getElementById("topPickNote").innerText="Simulado – Próximamente real";
+  }
+}
 
-    // --- CHECK MATCH ---
-    async function checkMatch() {
-      // simplificado, solo placeholder
-      // aquí puedes insertar la lógica real de matches
-      console.log("Check match para", currentProfile.id);
-      // si hay match real, abrir chat
-      // document.getElementById("chatModal").style.display = "flex";
-    }
+// --- LIKE / DISLIKE ---
+async function like(){
+  if(!currentProfile) return;
+  await supabase.from("likes").insert({user_id:currentUser,liked_user_id:currentProfile.id});
+  loadProfile();
+}
+function dislike(){ loadProfile(); }
 
-    // --- CHAT ---
-    function sendMessage() {
-      const msg = document.getElementById("messageInput").value;
-      if (!msg) return;
-      const div = document.createElement("div");
-      div.innerText = msg;
-      document.getElementById("messages").appendChild(div);
-      document.getElementById("messageInput").value = "";
-    }
-    function closeChat() { document.getElementById("chatModal").style.display="none"; }
+// --- CHAT ---
+function sendMessage(){
+  const msg=document.getElementById("messageInput").value;
+  if(!msg) return;
+  const div=document.createElement("div"); div.innerText=msg;
+  document.getElementById("messages").appendChild(div);
+  document.getElementById("messageInput").value="";
+}
+function closeChat(){ document.getElementById("chatModal").style.display="none"; }
 
-    // --- SWIPE GESTURES ---
-    let startX = 0;
-    let currentX = 0;
-    let isDragging = false;
-    const card = document.getElementById("profileCard");
+// --- PERFIL EDITABLE ---
+function loadProfileToEdit(){
+  if(!currentProfile) return;
+  document.getElementById("editName").value=currentProfile.name||"";
+  document.getElementById("editBio").value=currentProfile.bio||"";
+  document.getElementById("editPhoto").value=currentProfile.photo_url||"";
+}
+async function saveProfile(){
+  const name=document.getElementById("editName").value;
+  const bio=document.getElementById("editBio").value;
+  const photo=document.getElementById("editPhoto").value;
 
-    card.addEventListener("touchstart", (e)=>{
-      startX = e.touches[0].clientX;
-      isDragging = true;
-    });
-    card.addEventListener("touchmove", (e)=>{
-      if(!isDragging) return;
-      currentX = e.touches[0].clientX - startX;
-      card.style.transform = `translateX(${currentX}px) rotate(${currentX/15}deg)`;
-    });
-    card.addEventListener("touchend", ()=>{
-      isDragging = false;
-      if(currentX>80){ like(); }
-      else if(currentX<-80){ dislike(); }
-      card.style.transition="transform 0.3s";
-      card.style.transform="translateX(0px) rotate(0deg)";
-      setTimeout(()=>{ card.style.transition=""; },250);
-    });
+  const photosFiles=[
+    document.getElementById("photo1").files[0],
+    document.getElementById("photo2").files[0],
+    document.getElementById("photo3").files[0]
+  ];
+  let uploadedPhotos=[];
+  for(let i=0;i<photosFiles.length;i++){
+    if(!photosFiles[i]) continue;
+    const { data, error } = await supabase.storage.from("profile-photos").upload(`${currentUser}-${i}.jpg`, photosFiles[i], {upsert:true});
+    if(!error) uploadedPhotos.push(data.path);
+  }
+  await supabase.from("profiles").update({name:name,bio:bio,photo_url:photo,photos:JSON.stringify(uploadedPhotos)}).eq("id",currentUser);
+  alert("Perfil guardado!");
+  loadProfile();
+}
 
-    // --- INICIAL ---
-    loadProfile();
-  </script>
+// --- SWIPE ---
+let startX=0,currentX=0,isDragging=false;
+const card=document.getElementById("profileCard");
+card.addEventListener("touchstart",(e)=>{startX=e.touches[0].clientX;isDragging=true;});
+card.addEventListener("touchmove",(e)=>{if(!isDragging) return; currentX=e.touches[0].clientX-startX; card.style.transform=`translateX(${currentX}px) rotate(${currentX/15}deg)`;});
+card.addEventListener("touchend",()=>{isDragging=false; if(currentX>80) like(); else if(currentX<-80) dislike(); card.style.transition="transform 0.3s"; card.style.transform="translateX(0px) rotate(0deg)"; setTimeout(()=>{card.style.transition="";},250);});
+
+// --- PREMIUM PAYMENTS ---
+async function buyPremium(type,amount){
+  try{
+    await MiniKit.pay({amount:amount,currency:"WLD",to:WALLET,description:type+" RealVibe"});
+    alert(type+" comprado!");
+  }catch(e){ alert("Error pago: "+e.message); }
+}
+
+// --- FILTROS ---
+function openFilters(){document.getElementById("filtersModal").style.display="flex";}
+function closeFilters(){document.getElementById("filtersModal").style.display="none";}
+function updateAgeVal(){document.getElementById("ageVal").innerText="18-"+document.getElementById("ageSlider").value;}
+function updateDistVal(){document.getElementById("distVal").innerText="10-"+document.getElementById("distSlider").value;}
+function applyFilters(){alert("Filtros aplicados!");closeFilters();}
+
+// --- INICIAL ---
+</script>
 </body>
 </html>
