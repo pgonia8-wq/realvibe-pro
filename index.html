@@ -6,7 +6,6 @@
 <title>RealVibe Pro</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/minikit@latest/dist/minikit.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fa;margin:0;padding:0;}
@@ -40,21 +39,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fa;margin:0;padd
 </head>
 <body>
 
-<!-- WORLD ID VERIFICATION -->
-<div id="worldIdSection" class="max-w-400 mx-auto text-center p-4">
-  <h2 class="text-xl font-bold mb-2">Verificación World ID</h2>
-  <button class="like w-full" id="verifyBtn">Verificar</button>
-  <p id="worldIdStatus" class="mt-2 text-gray-600"></p>
-</div>
-
 <!-- DISCOVER / SWIPE -->
-<div id="discoverSection" style="display:none;">
+<div id="discoverSection">
   <div class="card" id="profileCard">
     <img id="profileImage" src="https://picsum.photos/400/500" alt="Profile">
     <div class="card-content">
       <h2 id="profileName" class="text-xl font-bold">Usuario</h2>
       <p id="profileBio" class="text-gray-600 mt-1">Bio del usuario</p>
-      <p id="topPickNote" class="text-xs text-gray-500 mt-1">Simulado – Próximamente real</p>
     </div>
     <div class="buttons">
       <button class="dislike" id="btnDislike">Dislike</button>
@@ -67,8 +58,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fa;margin:0;padd
       <button class="gold" onclick="buyPremium('Gold',25)">Gold 25 WLD</button>
       <button class="platinum" onclick="buyPremium('Platinum',60)">Platinum 60 WLD</button>
     </div>
-    <button class="like w-full mt-2" onclick="openFilters()">Filtros Avanzados</button>
-    <label class="flex items-center mt-2 justify-center"><input type="checkbox" id="womenFirst" class="mr-2"> Women Message First</label>
   </div>
 </div>
 
@@ -133,19 +122,10 @@ const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 let currentUser="User_1";
 let currentProfile=null;
 
-// --- WORLD ID ---
-document.getElementById("verifyBtn").addEventListener("click", async ()=>{
-  try{
-    await MiniKit.verifyWorldID({
-      actionId:"realvibe-verification",
-      onSuccess:()=>{ 
-        document.getElementById("worldIdStatus").innerText="✅ Verificado"; 
-        document.getElementById("worldIdSection").style.display="none";
-        document.getElementById("discoverSection").style.display="block";
-        loadProfile();
-      }
-    });
-  }catch(e){ alert("Error World ID: "+e.message);}
+// --- DESACTIVAR TEMPORALMENTE WORLD ID ---
+window.addEventListener("load", ()=>{
+  document.getElementById("discoverSection").style.display="block"; // mostrar Discover
+  loadProfile(); // cargar perfil
 });
 
 // --- LOAD PROFILE ---
@@ -156,9 +136,9 @@ async function loadProfile(){
     if(data.length>0){
       currentProfile=data[0];
       console.log("Perfil cargado:",currentProfile);
-      document.getElementById("profileImage").src=currentProfile.photo_url||"https://picsum.photos/400/500";
-      document.getElementById("profileName").innerText=currentProfile.name||"Usuario";
-      document.getElementById("profileBio").innerText=currentProfile.bio||"";
+      document.getElementById("profileImage").src=currentProfile.photo_url || "https://picsum.photos/400/500";
+      document.getElementById("profileName").innerText=currentProfile.name || "Usuario";
+      document.getElementById("profileBio").innerText=currentProfile.bio || "";
     }
   }catch(e){console.log("Error general:",e);}
 }
@@ -166,10 +146,12 @@ async function loadProfile(){
 // --- LIKE / DISLIKE ---
 document.getElementById("btnLike").addEventListener("click", async ()=>{
   if(!currentProfile) return;
+  console.log("Like a", currentProfile.name);
   await supabase.from("likes").insert({user_id:currentUser,liked_user_id:currentProfile.id});
   loadProfile();
 });
 document.getElementById("btnDislike").addEventListener("click", ()=>{
+  console.log("Dislike a", currentProfile.name);
   loadProfile();
 });
 
@@ -184,14 +166,7 @@ async function saveProfile(){
   const name=document.getElementById("editName").value;
   const bio=document.getElementById("editBio").value;
   const photo=document.getElementById("editPhoto").value;
-  const files=[document.getElementById("photo1").files[0],document.getElementById("photo2").files[0],document.getElementById("photo3").files[0]];
-  let uploaded=[];
-  for(let i=0;i<files.length;i++){
-    if(!files[i]) continue;
-    const { data, error } = await supabase.storage.from("profile-photos").upload(`${currentUser}-${i}.jpg`, files[i], {upsert:true});
-    if(!error) uploaded.push(data.path);
-  }
-  await supabase.from("profiles").update({name:name,bio:bio,photo_url:photo,photos:JSON.stringify(uploaded)}).eq("id",currentUser);
+  await supabase.from("profiles").update({name:name,bio:bio,photo_url:photo}).eq("id",currentUser);
   alert("Perfil guardado!");
   loadProfile();
 }
@@ -215,10 +190,7 @@ card.addEventListener("touchend",()=>{isDragging=false; if(currentX>80) document
 
 // --- PREMIUM ---
 async function buyPremium(type,amount){
-  try{
-    await MiniKit.pay({amount:amount,currency:"WLD",to:WALLET,description:type+" RealVibe"});
-    alert(type+" comprado!");
-  }catch(e){ alert("Error pago: "+e.message); }
+  alert(type+" comprado! (simulado)");
 }
 
 // --- FILTROS ---
@@ -229,4 +201,4 @@ function updateDistVal(){document.getElementById("distVal").innerText="10-"+docu
 function applyFilters(){alert("Filtros aplicados!"); closeFilters();}
 </script>
 </body>
-  </html>
+</html>
